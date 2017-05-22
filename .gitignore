@@ -1,0 +1,11 @@
+# Make
+lib
+obj
+bin
+
+# Mac stuff
+.DS_Store
+
+# Xcode
+xcuserdata
+
