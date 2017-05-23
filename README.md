@@ -1,5 +1,5 @@
 # WirelessKit
-A simple framework on Wi-Fi Availablility / Security (Coming soon).
+A simple framework on Wi-Fi Availability / Security (Coming soon).
 
 ### ⚠️Before Your Compiling
 As a matter of fact, you can make trouble to your neighbors easily with these codes. However, think about HOW WOULD YOU FEEL LIKE when there is something needs to be done online while your neighbors are DOING THE SAME THING TO YOU. 
