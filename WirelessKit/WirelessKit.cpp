@@ -234,7 +234,10 @@ bool Interface::open() {
     if (this->_pcap_handle == NULL) {
         char pcap_error[PCAP_ERRBUF_SIZE];
         this->_pcap_handle = pcap_open_live(this->_ifname.c_str(), 65536, 1, 1, pcap_error);
-        if (!this->_pcap_handle) return false;
+        if (!this->_pcap_handle) {
+            fprintf(stderr, "%s: %s\n", __PRETTY_FUNCTION__, pcap_error);
+            return false;
+        }
         pcap_set_datalink(this->_pcap_handle, DLT_IEEE802_11_RADIO);
     }
     return true;
@@ -446,8 +449,9 @@ CapturedPacket Sniffer::capture_block() {
 void Sniffer::capture(std::function<bool(const CapturedPacket & captured)> callback) {
     this->_capturer = std::make_shared<std::thread>([&]{
         struct pcap_pkthdr packet;
-        uint8_t * data;
+        uint8_t * data = NULL;
         bool shoud_capture = true;
+        pcap_set_rfmon(this->_ifname->_pcap_handle, 1);
         while (shoud_capture && this->_ifname.get()) {
             usleep(10000);
             data = (uint8_t *)pcap_next(this->_ifname->_pcap_handle, &packet);
