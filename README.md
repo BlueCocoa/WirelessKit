@@ -9,8 +9,16 @@ DO NOT BE A JERK!
 ### Compile Static Library
 ```$ make && sudo make install```
 
+#### For Raspberry Pi
+There're some issues with the static library.
+
 ### Compile Demos
 ```$ make all && sudo make install-demo```
+
+#### For Raspberry Pi
+Please compile demos with
+
+```$ PLATFORM=RaspberryPi make all && sudo make install-demo```
 
 ### Demos
 
