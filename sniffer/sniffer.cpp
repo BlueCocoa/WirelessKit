@@ -22,6 +22,14 @@
 using namespace std;
 using namespace WirelessKit;
 
+#ifndef DEFAULT_WLAN
+    #if defined(__APPLE__)
+        #define DEFAULT_WLAN "en0"
+    #elif defined(__RASPBIAN__)
+        #define DEFAULT_WLAN "wlan0"
+    #endif
+#endif
+
 const struct option options[] = {
     { "ifname", optional_argument, NULL, 'i' },
     { "help",   no_argument,       NULL, 'h' },
@@ -39,21 +47,30 @@ int main(int argc, const char * argv[]) {
         exit(EXIT_FAILURE);
     }
     
-    Interface ifname("en0");
+    Interface ifname(DEFAULT_WLAN);
     
     int arg, argslot;
     while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "i:h", options, &argslot)) != -1) {
         switch (arg) {
             case 'i' : {
-                ifname = std::string(optarg);
+                ifname = Interface(optarg);
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname en0]\nUse at your own risk & don't be jerk!", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "]\nUse at your own risk & don't be jerk!", argv[0]);
                 break;
             }
         }
     }
+    
+#if defined(__RASPBIAN__)
+    pcap_t * pcap_handle = NULL;
+    char pcap_error[PCAP_ERRBUF_SIZE];
+    pcap_handle = pcap_open_live(ifname._ifname.c_str(), 65536, 1, 1, pcap_error);
+    pcap_set_datalink(pcap_handle, DLT_IEEE802_11_RADIO);
+    pcap_set_rfmon(pcap_handle, 1);
+    ifname._pcap_handle = pcap_handle;
+#endif
     
     if (ifname.open()) {
         working = true;

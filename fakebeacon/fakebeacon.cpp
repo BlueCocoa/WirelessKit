@@ -22,6 +22,14 @@
 using namespace std;
 using namespace WirelessKit;
 
+#ifndef DEFAULT_WLAN
+    #if defined(__APPLE__)
+        #define DEFAULT_WLAN "en0"
+    #elif defined(__RASPBIAN__)
+        #define DEFAULT_WLAN "wlan0"
+    #endif
+#endif
+
 const struct option options[] = {
     { "ssid-with-bssid",  optional_argument, NULL, 'b' },
     { "ifname",           optional_argument, NULL, 'i' },
@@ -42,7 +50,7 @@ int main(int argc, const char * argv[]) {
         exit(EXIT_FAILURE);
     }
     
-    Interface ifname("en0");
+    Interface ifname(DEFAULT_WLAN);
     
     int arg, argslot;
     while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "b:i:hs:", options, &argslot)) != -1) {
@@ -64,15 +72,24 @@ int main(int argc, const char * argv[]) {
                 break;
             }
             case 'i' : {
-                ifname = std::string(optarg);
+                ifname = Interface(optarg);
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname en0] [-b|--ssid-with-bssid BB:BB:BB:BB:BB:BB@SSID] [-s|--ssid SSID]\nUse at your own risk & don't be jerk!", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--ssid-with-bssid BB:BB:BB:BB:BB:BB@SSID] [-s|--ssid SSID]\nUse at your own risk & don't be jerk!", argv[0]);
                 break;
             }
         }
     }
+    
+#if defined(__RASPBIAN__)
+    pcap_t * pcap_handle = NULL;
+    char pcap_error[PCAP_ERRBUF_SIZE];
+    pcap_handle = pcap_open_live(ifname._ifname.c_str(), 65536, 1, 1, pcap_error);
+    pcap_set_datalink(pcap_handle, DLT_IEEE802_11_RADIO);
+    pcap_set_rfmon(pcap_handle, 1);
+    ifname._pcap_handle = pcap_handle;
+#endif
     
     if (ifname.open() && APs.size() > 0) {
         uint64_t count = 0;
