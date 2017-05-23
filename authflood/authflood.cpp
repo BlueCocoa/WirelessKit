@@ -16,8 +16,6 @@
 #include <iostream>
 #include <vector>
 #include <thread>
-#include <libkern/OSByteOrder.h>
-#include <mach-o/swap.h>
 #include "WirelessKit.hpp"
 
 using namespace std;
