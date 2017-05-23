@@ -1,6 +1,7 @@
 CXX = g++
 AR = ar
 RANLIB = ranlib
+PLATFORM ?= `uname`
 
 PREFIX ?= /usr/local
 WirelessKitSource = WirelessKit/WirelessKit.cpp
@@ -8,35 +9,34 @@ WirelessKitHeader = WirelessKit/WirelessKit.hpp
 WirelessKitObject = obj/WirelessKit.o
 WirelessKitLib = lib/libWirelessKit.a
 
-authflood = authflood
-
 CPPFLAGS += -Os -I./WirelessKit -std=c++14 -fPIC
-LDFLAGS += -lpcap -lpthread -Llib -lWirelessKit
+LDFLAGS += -lpcap -lpthread 
+LINK_WIRELESSKIT = -Llib -lWirelessKit
 ARFLAGS += -crv $(WirelessKitLib) $(WirelessKitObject)
 RANLIBFLAGS += $(WirelessKitLib)
 
 $(WirelessKitLib) : 
-	@rm -f ./lib
-	@rm -f ./obj
-	@rm -f ./bin
+	@rm -rf ./lib
+	@rm -rf ./obj
+	@rm -rf ./bin
 	@mkdir lib
 	@mkdir obj
 	@mkdir bin
 	$(CXX) $(CPPFLAGS) -c $(WirelessKitSource) -o $(WirelessKitObject)
-	case `uname` in Darwin*) $(AR) crv $(WirelessKitLib) $(WirelessKitObject) ;; *) $(AR) cr $(WirelessKitLib) && $(AR) crv $(WirelessKitLib) $(WirelessKitObject) ;; esac
+	case $(PLATFORM) in Darwin*) $(AR) crv $(WirelessKitLib) $(WirelessKitObject) ;; *) $(AR) cr $(WirelessKitLib) && $(AR) crv $(WirelessKitLib) $(WirelessKitObject) ;; esac
 	$(RANLIB) $(RANLIBFLAGS)
 
 authflood : $(WirelessKitLib)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) authflood/authflood.cpp -o bin/authflood
+	case $(PLATFORM) in RaspberryPi*) $(CXX) $(CPPFLAGS) -D__RASPBIAN__ $(LDFLAGS) $(WirelessKitSource) authflood/authflood.cpp -o bin/authflood ;; *) $(CXX) $(CPPFLAGS) $(LDFLAGS) $(LINK_WIRELESSKIT) authflood/authflood.cpp -o bin/authflood ;; esac
 
 deauth : $(WirelessKitLib)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) deauth/deauth.cpp -o bin/deauth
+	case $(PLATFORM) in RaspberryPi*) $(CXX) $(CPPFLAGS) -D__RASPBIAN__ $(LDFLAGS) $(WirelessKitSource) deauth/deauth.cpp -o bin/deauth ;; *) $(CXX) $(CPPFLAGS) $(LDFLAGS) $(LINK_WIRELESSKIT) deauth/deauth.cpp -o bin/deauth ;; esac
 
 fakebeacon : $(WirelessKitLib)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) fakebeacon/fakebeacon.cpp -o bin/fakebeacon
+	case $(PLATFORM) in RaspberryPi*) $(CXX) $(CPPFLAGS) -D__RASPBIAN__ $(LDFLAGS) $(WirelessKitSource) fakebeacon/fakebeacon.cpp -o bin/fakebeacon ;; *) $(CXX) $(CPPFLAGS) $(LDFLAGS) $(LINK_WIRELESSKIT) fakebeacon/fakebeacon.cpp -o bin/fakebeacon ;; esac
 	
 sniffer : $(WirelessKitLib)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) sniffer/sniffer.cpp -o bin/sniffer
+	case $(PLATFORM) in RaspberryPi*) $(CXX) $(CPPFLAGS) -D__RASPBIAN__ $(LDFLAGS) $(WirelessKitSource) sniffer/sniffer.cpp -o bin/sniffer ;; *) $(CXX) $(CPPFLAGS) $(LDFLAGS) $(LINK_WIRELESSKIT) sniffer/sniffer.cpp -o bin/sniffer ;; esac
 
 all : $(WirelessKitLib) authflood deauth fakebeacon sniffer
 	
