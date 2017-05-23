@@ -57,7 +57,7 @@ int main(int argc, const char * argv[]) {
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "]\nUse at your own risk & don't be jerk!", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "]\nUse at your own risk & don't be jerk!\n", argv[0]);
                 break;
             }
         }

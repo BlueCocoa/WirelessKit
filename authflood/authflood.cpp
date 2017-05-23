@@ -62,7 +62,7 @@ int main(int argc, const char * argv[]) {
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB]\nUse at your own risk & don't be jerk!", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB]\nUse at your own risk & don't be jerk!\n", argv[0]);
                 break;
             }
         }

@@ -86,7 +86,7 @@ int main(int argc, const char * argv[]) {
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-a|--all] [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB] [-m|--mac CC:CC:CC:CC:CC:CC] [-s|--specify CC:CC:CC:CC:CC:CC@BB:BB:BB:BB:BB:BB] [-w|--whitelist CC:CC:CC:CC:CC:CC]\nUse at your own risk & don't be jerk!", argv[0]);
+                fprintf(stdout, "%s [-a|--all] [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB] [-m|--mac CC:CC:CC:CC:CC:CC] [-s|--specify CC:CC:CC:CC:CC:CC@BB:BB:BB:BB:BB:BB] [-w|--whitelist CC:CC:CC:CC:CC:CC]\nUse at your own risk & don't be jerk!\n", argv[0]);
                 break;
             }
             case 's' : {
