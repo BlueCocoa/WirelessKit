@@ -30,6 +30,7 @@ const struct option options[] = {
 void quit(int);
 
 atomic_bool working;
+atomic_bool done;
 condition_variable cond;
 
 int main(int argc, const char * argv[]) {
@@ -56,6 +57,7 @@ int main(int argc, const char * argv[]) {
     
     if (ifname.open()) {
         working = true;
+        done = false;
         signal(SIGINT, quit);
         Sniffer sniffer(ifname);
 
@@ -64,7 +66,10 @@ int main(int argc, const char * argv[]) {
                 fprintf(stdout, "%s -> %s -> %s\n", packet.header()->source()->stringify().c_str(), packet.header()->transmitter()->stringify().c_str(), packet.header()->destination()->stringify().c_str());
                 fflush(stdout);
             }
-            return true;
+            if (!working) {
+                done = true;
+            }
+            return working;
         });
         
         std::mutex mtx;
@@ -72,6 +77,7 @@ int main(int argc, const char * argv[]) {
             std::unique_lock<std::mutex> lock(mtx);
             cond.wait(lock);
             working = false;
+            while (!done) this_thread::yield();
         }).join();
     }
     
