@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/signal.h>
 #include <unistd.h>
 #include <atomic>
@@ -107,14 +108,12 @@ void split(const char * to_split, char by, char ** head, char ** tail) {
     for (size_t i = 0; i < strlen(to_split); ++i) {
         if (to_split[i] == by) {
             if (head) {
-                char * h = (char *)malloc(i);
-                bzero(h, i);
+                char * h = new char[i];
                 memcpy(h, to_split, i);
                 *head = h;
             }
             if (tail) {
-                char * t = (char *)malloc(strlen(to_split) - i + 2);
-                bzero(t, strlen(to_split) - i + 2);
+                char * t = new char[strlen(to_split) - i + 2];
                 memcpy(t, to_split + i + 1, strlen(to_split) - i + 1);
                 *tail = t;
             }
