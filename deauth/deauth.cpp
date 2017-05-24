@@ -171,25 +171,24 @@ int main(int argc, const char * argv[]) {
                             }
                             return false;
                         })) {
-                            {
-                                lock_guard<mutex> locker(global_mtx);
-                                
-                                if (!any_of(APs.begin(), APs.end(), [&ap](const AP & _) -> bool {
-                                    if (_._mac->is_equal(*ap._mac)) {
-                                        return true;
-                                    }
-                                    return false;
-                                })) {
-                                    APs.emplace_back(ap);
+                            if (!any_of(APs.begin(), APs.end(), [&ap](const AP & _) -> bool {
+                                if (_._mac->is_equal(*ap._mac)) {
+                                    return true;
                                 }
-                                
-                                if (!any_of(stations.begin(), stations.end(), [&station](const STA & _) -> bool {
-                                    if (_._mac->is_equal(*station._mac)) {
-                                        return true;
-                                    }
-                                    return false;
-                                })) {
-                                    stations.emplace_back(station);
+                                return false;
+                            })) {
+                                APs.emplace_back(ap);
+                            }
+                            
+                            if (!any_of(stations.begin(), stations.end(), [&station](const STA & _) -> bool {
+                                if (_._mac->is_equal(*station._mac)) {
+                                    return true;
+                                }
+                                return false;
+                            })) {
+                                stations.emplace_back(station);
+                                {
+                                    lock_guard<mutex> locker(global_mtx);
                                     deauth.emplace_back(DeauthClient(ap, station));
                                 }
                             }
