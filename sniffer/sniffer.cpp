@@ -38,7 +38,8 @@ const struct option options[] = {
 void quit(int);
 
 atomic_bool working;
-atomic_bool done;
+atomic_bool sniffer_done;
+atomic_bool channel_done;
 condition_variable cond;
 
 int main(int argc, const char * argv[]) {
@@ -74,7 +75,8 @@ int main(int argc, const char * argv[]) {
     
     if (ifname.open()) {
         working = true;
-        done = false;
+        sniffer_done = false;
+        channel_done = false;
         signal(SIGINT, quit);
         Sniffer sniffer(ifname);
 
@@ -84,9 +86,24 @@ int main(int argc, const char * argv[]) {
                 fflush(stdout);
             }
             if (!working) {
-                done = true;
+                sniffer_done = true;
             }
             return working;
+        });
+        
+        std::thread channel_change([&]{
+            while (working) {
+#if defined(__APPLE__)
+                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,149,153,157,161,165};
+#elif defined(__RASPBIAN__)
+                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11};
+#endif
+                for (uint8_t chan : channels) {
+                    if (!working) channel_done = true;
+                    ifname.setChannel(chan);
+                    sleep(1);
+                }
+            }
         });
         
         std::mutex mtx;
@@ -94,7 +111,8 @@ int main(int argc, const char * argv[]) {
             std::unique_lock<std::mutex> lock(mtx);
             cond.wait(lock);
             working = false;
-            while (!done) this_thread::yield();
+            channel_change.join();
+            while (!sniffer_done || !channel_done) this_thread::yield();
         }).join();
     }
     

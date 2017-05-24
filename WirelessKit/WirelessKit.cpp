@@ -12,6 +12,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <random>
+#include <sstream>
 #include <thread>
 
 using namespace WirelessKit;
@@ -241,6 +242,16 @@ bool Interface::open() {
         pcap_set_datalink(this->_pcap_handle, DLT_IEEE802_11_RADIO);
     }
     return true;
+}
+
+bool Interface::setChannel(int channel) {
+    std::ostringstream cli;
+#if defined(__APPLE__)
+    cli << "change_channel " << this->_ifname.c_str() << ' ' << channel;
+#elif defined(__RASPBIAN__)
+    cli << "iwconfig " << this->_ifname.c_str() << " channel " << channel;
+#endif
+    return system(cli.str().c_str()) == 0;
 }
 
 #pragma mark

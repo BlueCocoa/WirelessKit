@@ -127,6 +127,7 @@ namespace WirelessKit {
         Interface(const Interface & _);
         ~Interface();
         bool open();
+        bool setChannel(int channel);
         
     /* private: */
     /*
