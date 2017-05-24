@@ -41,6 +41,7 @@ void split(const char * to_split, char by, char ** head, char ** tail);
 void quit(int);
 
 atomic_bool working;
+atomic_bool fake_beacon_done;
 condition_variable cond;
 vector<BeaconFloodFrame> APs;
 
@@ -60,15 +61,14 @@ int main(int argc, const char * argv[]) {
                 split(optarg, '@', &bssid, &ssid);
                 if (bssid && ssid) {
                     MAC BSSID(bssid);
-                    if (BSSID.is_valid()) APs.emplace_back(BeaconFloodFrame(AP(std::string(ssid), BSSID)));
+                    if (BSSID.is_valid()) APs.emplace_back(BeaconFloodFrame(AP(string(ssid), BSSID)));
                 }
                 if (ssid) free(ssid);
                 if (bssid) free(bssid);
                 break;
             }
             case 's' : {
-                std::string SSID = std::string(optarg);
-                APs.emplace_back(BeaconFloodFrame(AP(SSID)));
+                APs.emplace_back(BeaconFloodFrame(AP(string(optarg), MAC::random())));
                 break;
             }
             case 'i' : {
@@ -77,7 +77,7 @@ int main(int argc, const char * argv[]) {
             }
             case 'h' : {
                 fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--ssid-with-bssid BB:BB:BB:BB:BB:BB@SSID] [-s|--ssid SSID]\nUse at your own risk & don't be jerk!\n", argv[0]);
-                break;
+                return 0;
             }
         }
     }
@@ -94,27 +94,33 @@ int main(int argc, const char * argv[]) {
     if (ifname.open() && APs.size() > 0) {
         uint64_t count = 0;
         working = true;
+        fake_beacon_done = false;
         signal(SIGINT, quit);
         
         fprintf(stdout, "\n");
-        std::thread faker{[&count, &ifname]{
+        thread faker{[&count, &ifname]{
             while (working) {
-                for (BeaconFloodFrame & beacon : APs) {
+                for (auto iter = APs.begin(); iter != APs.end(); iter++) {
+                    if (!working) break;
+                    BeaconFloodFrame & beacon = *iter;
                     beacon.beacon(ifname);
                     count++;
+                    fprintf(stdout, "%llu Beacon packets sent\r", count);
+                    fflush(stdout);
                 }
-                fprintf(stdout, "%llu Beacon packets sent\r", count);
-                fflush(stdout);
                 usleep(100000);
             }
+            fake_beacon_done = true;
         }};
         
-        std::mutex mtx;
-        std::thread ([&]{
-            std::unique_lock<std::mutex> lock(mtx);
+        mutex mtx;
+        thread ([&]{
+            unique_lock<mutex> lock(mtx);
             cond.wait(lock);
             working = false;
             fprintf(stdout, "\r%llu Beacon packets sent in total!\n", count);
+            while (!fake_beacon_done) this_thread::yield();
+            faker.join();
         }).join();
     }
     

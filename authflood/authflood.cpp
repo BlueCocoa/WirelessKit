@@ -38,6 +38,7 @@ const struct option options[] = {
 void quit(int);
 
 atomic_bool working;
+atomic_bool flood_done;
 condition_variable cond;
 vector<AuthFloodFrame> APs;
 
@@ -63,7 +64,7 @@ int main(int argc, const char * argv[]) {
             }
             case 'h' : {
                 fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB]\nUse at your own risk & don't be jerk!\n", argv[0]);
-                break;
+                return 0;
             }
         }
     }
@@ -80,27 +81,33 @@ int main(int argc, const char * argv[]) {
     if (ifname.open() && APs.size() > 0) {
         uint64_t count = 0;
         working = true;
+        flood_done = false;
         signal(SIGINT, quit);
 
         fprintf(stdout, "\n");
-        std::thread flooder{[&count, &ifname]{
+        thread flooder{[&count, &ifname]{
             while (working) {
-                for (AuthFloodFrame & auth : APs) {
+                for (auto iter = APs.begin(); iter != APs.end(); iter++) {
+                    if (!working) break;
+                    AuthFloodFrame & auth = *iter;
                     auth.auth(ifname);
                     count++;
+                    fprintf(stdout, "%llu Beacon packets sent\r", count);
+                    fflush(stdout);
                 }
-                fprintf(stdout, "%llu Beacon packets sent\r", count);
-                fflush(stdout);
                 usleep(100000);
             }
+            flood_done = true;
         }};
         
-        std::mutex mtx;
-        std::thread ([&]{
-            std::unique_lock<std::mutex> lock(mtx);
+        mutex mtx;
+        thread ([&]{
+            unique_lock<mutex> lock(mtx);
             cond.wait(lock);
             working = false;
             fprintf(stdout, "\r%llu authenticate packets sent in total!\n", count);
+            while (!flood_done) this_thread::yield();
+            flooder.join();
         }).join();
     }
     

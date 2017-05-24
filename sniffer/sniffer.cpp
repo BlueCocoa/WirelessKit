@@ -59,7 +59,7 @@ int main(int argc, const char * argv[]) {
             }
             case 'h' : {
                 fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "]\nUse at your own risk & don't be jerk!\n", argv[0]);
-                break;
+                return 0;
             }
         }
     }
@@ -85,9 +85,7 @@ int main(int argc, const char * argv[]) {
                 fprintf(stdout, "%s -> %s -> %s\n", packet.header()->source()->stringify().c_str(), packet.header()->transmitter()->stringify().c_str(), packet.header()->destination()->stringify().c_str());
                 fflush(stdout);
             }
-            if (!working) {
-                sniffer_done = true;
-            }
+            if (!working) sniffer_done = true;
             return working;
         });
         
@@ -98,12 +96,13 @@ int main(int argc, const char * argv[]) {
 #elif defined(__RASPBIAN__)
                 vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11};
 #endif
-                for (uint8_t chan : channels) {
-                    if (!working) channel_done = true;
-                    ifname.setChannel(chan);
+                for (int i = 0; i < channels.size(); ++i) {
+                    if (!working) break;
+                    ifname.setChannel(channels[i]);
                     sleep(1);
                 }
             }
+            channel_done = true;
         });
         
         std::mutex mtx;
@@ -111,8 +110,8 @@ int main(int argc, const char * argv[]) {
             std::unique_lock<std::mutex> lock(mtx);
             cond.wait(lock);
             working = false;
-            channel_change.join();
             while (!sniffer_done || !channel_done) this_thread::yield();
+            channel_change.join();
         }).join();
     }
     

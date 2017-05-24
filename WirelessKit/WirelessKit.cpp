@@ -462,8 +462,7 @@ void Sniffer::capture(std::function<bool(const CapturedPacket & captured)> callb
         struct pcap_pkthdr packet;
         uint8_t * data = NULL;
         bool shoud_capture = true;
-        pcap_set_rfmon(this->_ifname->_pcap_handle, 1);
-        while (shoud_capture && this->_ifname.get()) {
+        while (shoud_capture && this->_ifname->_pcap_handle) {
             usleep(10000);
             data = (uint8_t *)pcap_next(this->_ifname->_pcap_handle, &packet);
             if (data) {
