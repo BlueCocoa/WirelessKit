@@ -194,6 +194,7 @@ namespace WirelessKit {
         const u_char * body_data() const;
         int packet_len() const;
         int body_len() const;
+        int RSSI() const;
         
     /* private: */
     /*
@@ -205,6 +206,7 @@ namespace WirelessKit {
         int _packet_len;
         const u_char * _packet_data;
         int _body_len;
+        int _RSSI;
         const u_char * _body_data;
     };
     

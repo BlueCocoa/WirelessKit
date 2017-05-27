@@ -82,7 +82,7 @@ int main(int argc, const char * argv[]) {
 
         sniffer.capture([&](const CapturedPacket & packet) -> bool {
             if (packet.is_valid()) {
-                fprintf(stdout, "%s -> %s -> %s\n", packet.header()->source()->stringify().c_str(), packet.header()->transmitter()->stringify().c_str(), packet.header()->destination()->stringify().c_str());
+                fprintf(stdout, "%s -> %s -> %s [%d]\n", packet.header()->source()->stringify().c_str(), packet.header()->transmitter()->stringify().c_str(), packet.header()->destination()->stringify().c_str(), packet.RSSI());
                 fflush(stdout);
             }
             if (!working) sniffer_done = true;

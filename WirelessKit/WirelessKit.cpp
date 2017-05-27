@@ -377,6 +377,36 @@ CapturedPacket::CapturedPacket(struct pcap_pkthdr * header, const u_char * buffe
         return;
     }
     
+    u_char present = buffer[4];
+    
+    if (!(present & 0x20)) {
+        this->_RSSI = 6;
+    } else {
+        size_t fieldOffset = 0;
+        if (present & 1) {
+            fieldOffset += 8;
+        }
+        if (present & 2) {
+            fieldOffset += 1;
+        }
+        if (present & 4) {
+            fieldOffset += 1;
+        }
+        if (present & 8) {
+            if (fieldOffset & 1) {
+                fieldOffset++;
+            }
+            fieldOffset += 4;
+        }
+        if (present & 0x10) {
+            if (fieldOffset & 1) {
+                fieldOffset++;
+            }
+            fieldOffset += 2;
+        }
+        this->_RSSI = (int)((char *)buffer)[8+fieldOffset];
+    }
+    
     this->_valid = true;
     this->_header = std::make_shared<MACHeader>(MACHeader(this->_packet_data));
 }
@@ -424,6 +454,10 @@ int CapturedPacket::packet_len() const {
 
 int CapturedPacket::body_len() const {
     return this->_body_len;
+}
+
+int CapturedPacket::RSSI() const {
+    return this->_RSSI;
 }
 
 #pragma mark
