@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <sys/signal.h>
 #include <unistd.h>
 #include <atomic>
@@ -63,8 +64,8 @@ int main(int argc, const char * argv[]) {
                     MAC BSSID(bssid);
                     if (BSSID.is_valid()) APs.emplace_back(BeaconFloodFrame(AP(string(ssid), BSSID)));
                 }
-                if (ssid) free(ssid);
-                if (bssid) free(bssid);
+                if (ssid) delete [] ssid;
+                if (bssid) delete [] bssid;
                 break;
             }
             case 's' : {
@@ -132,12 +133,14 @@ void split(const char * to_split, char by, char ** head, char ** tail) {
         if (to_split[i] == by) {
             if (head) {
                 char * h = new char[i];
+                bzero(h, strlen(to_split) - i);
                 memcpy(h, to_split, i);
                 *head = h;
             }
             if (tail) {
-                char * t = new char[strlen(to_split) - i + 2];
-                memcpy(t, to_split + i + 1, strlen(to_split) - i + 1);
+                char * t = new char[strlen(to_split) - i];
+                bzero(t, strlen(to_split) - i);
+                memcpy(t, to_split + i + 1, strlen(to_split) - i - 1);
                 *tail = t;
             }
             break;
