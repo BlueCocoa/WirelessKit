@@ -10,6 +10,7 @@
 #include "WirelessKit.hpp"
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <unistd.h>
 #include <random>
 #include <sstream>
@@ -413,7 +414,7 @@ CapturedPacket::CapturedPacket(struct pcap_pkthdr * header, const u_char * buffe
 
 CapturedPacket::CapturedPacket(const CapturedPacket & _) {
     this->_valid = _._valid;
-    this->_header = std::make_shared<MACHeader>(*_._header.get());
+    this->_header = _._header;
     this->_packet_len = _._packet_len;
     this->_body_len = _._body_len;
     if (this->_valid) {
@@ -599,6 +600,7 @@ uint8_t * DeauthClient::packet(size_t * bytes) const {
     deauth_req.setSource(this->_ap->_mac);
     
     uint8_t * _deauth_packet = new uint8_t[34];
+    bzero(_deauth_packet, 34);
     uint16_t radioLen = 8;
     uint8_t * deauth_header = deauth_req.data();
     uint16_t resaon = 0x0001;
@@ -655,7 +657,8 @@ uint8_t * BeaconFloodFrame::packet(size_t * bytes) const {
     uint8_t * beacon_header_data = beacon_header.data();
     
     
-    uint8_t * packet_data = new uint8_t[44 + 244 + this->_ap->_SSID.length()];
+    uint8_t * packet_data = new uint8_t[46 + 244 + this->_ap->_SSID.length()];
+    bzero(packet_data, 46 + 244 + this->_ap->_SSID.length());
     
     uint16_t header_len = 8;
     memcpy(&packet_data[2], &header_len, sizeof(uint16_t));
@@ -717,6 +720,7 @@ uint8_t * AuthFloodFrame::packet(size_t * bytes) const {
     uint8_t * auth_header_data = auth_header.data();
     
     uint8_t * data = new uint8_t[38];
+    bzero(data, 38);
 
     uint16_t header_len = 8;
     memcpy(&data[2], &header_len, sizeof(uint16_t));
