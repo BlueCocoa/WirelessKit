@@ -247,7 +247,8 @@ bool Interface::open() {
 bool Interface::setChannel(int channel) {
     std::ostringstream cli;
 #if defined(__APPLE__)
-    cli << "change_channel " << this->_ifname.c_str() << ' ' << channel;
+    system("/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -z");
+    cli << "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -c" << channel;
 #elif defined(__RASPBIAN__)
     cli << "iwconfig " << this->_ifname.c_str() << " channel " << channel;
 #endif

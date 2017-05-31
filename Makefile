@@ -13,7 +13,6 @@ CPPFLAGS += -Os -I./WirelessKit -std=c++14 -fPIC
 LDFLAGS += -lpcap -lpthread 
 LINK_WIRELESSKIT = -Llib -lWirelessKit
 LINK_COREWLAN = -framework CoreWLAN
-CHANNEL_HELPER_SOURCE = WirelessKit/change_channel.m
 ARFLAGS += -crv $(WirelessKitLib) $(WirelessKitObject)
 RANLIBFLAGS += $(WirelessKitLib)
 
@@ -25,7 +24,6 @@ $(WirelessKitLib) :
 	@mkdir obj
 	@mkdir bin
 	$(CXX) $(CPPFLAGS) -c $(WirelessKitSource) -o $(WirelessKitObject)
-	case $(PLATFORM) in Darwin*) $(CXX) -x objective-c -fobjc-arc -Os -fPIC -framework Foundation $(LINK_COREWLAN) $(CHANNEL_HELPER_SOURCE) -o bin/change_channel ;; esac
 	case $(PLATFORM) in Darwin*) $(AR) crv $(WirelessKitLib) $(CHANNEL_HELPER_OBJECT) $(WirelessKitObject) ;; *) $(AR) cr $(WirelessKitLib) && $(AR) crv $(WirelessKitLib) $(WirelessKitObject) ;; esac
 	$(RANLIB) $(RANLIBFLAGS)
 
