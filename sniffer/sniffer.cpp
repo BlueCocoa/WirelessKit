@@ -31,8 +31,9 @@ using namespace WirelessKit;
 #endif
 
 const struct option options[] = {
-    { "ifname", optional_argument, NULL, 'i' },
-    { "help",   no_argument,       NULL, 'h' },
+    { "channel", optional_argument, NULL, 'c'},
+    { "ifname",  optional_argument, NULL, 'i' },
+    { "help",    no_argument,       NULL, 'h' },
 };
 
 void quit(int);
@@ -41,6 +42,7 @@ atomic_bool working;
 atomic_bool sniffer_done;
 atomic_bool channel_done;
 condition_variable cond;
+vector<uint32_t> channels;
 
 int main(int argc, const char * argv[]) {
     if (getuid()) {
@@ -51,17 +53,32 @@ int main(int argc, const char * argv[]) {
     Interface ifname(DEFAULT_WLAN);
     
     int arg, argslot;
-    while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "i:h", options, &argslot)) != -1) {
+    while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "c:i:h", options, &argslot)) != -1) {
         switch (arg) {
+            case 'c' : {
+                uint32_t chan = atoi(optarg);
+                if (find(channels.begin(), channels.end(), chan) != channels.end()) {
+                    channels.emplace_back(chan);
+                }
+                break;
+            }
             case 'i' : {
                 ifname = Interface(optarg);
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "]\nUse at your own risk & don't be jerk!\n", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-c|--channel D]\nUse at your own risk & don't be jerk!\n", argv[0]);
                 return 0;
             }
         }
+    }
+    
+    if (channels.size() == 0) {
+#if defined(__APPLE__)
+        channels = {1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,149,153,157,161,165};
+#elif defined(__RASPBIAN__)
+        channels = {1,2,3,4,5,6,7,8,9,10,11};
+#endif
     }
     
 #if defined(__RASPBIAN__)
@@ -91,11 +108,6 @@ int main(int argc, const char * argv[]) {
         
         std::thread channel_change([&]{
             while (working) {
-#if defined(__APPLE__)
-                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11,12,13,36,40,44,48,52,56,60,64,149,153,157,161,165};
-#elif defined(__RASPBIAN__)
-                vector<uint8_t> channels = {1,2,3,4,5,6,7,8,9,10,11};
-#endif
                 for (int i = 0; i < channels.size(); ++i) {
                     if (!working) break;
                     ifname.setChannel(channels[i]);
