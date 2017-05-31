@@ -30,6 +30,8 @@ using namespace WirelessKit;
         #define DEFAULT_WLAN "en0"
     #elif defined(__RASPBIAN__)
         #define DEFAULT_WLAN "wlan0"
+    #else
+        #warning You can set a default interface for you platform at compile time by `DEFAULT_WLAN=ifname make all'
     #endif
 #endif
 

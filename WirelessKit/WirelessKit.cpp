@@ -251,6 +251,8 @@ bool Interface::setChannel(int channel) {
     cli << "/System/Library/PrivateFrameworks/Apple80211.framework/Versions/A/Resources/airport -c" << channel;
 #elif defined(__RASPBIAN__)
     cli << "iwconfig " << this->_ifname.c_str() << " channel " << channel;
+#else
+#warning Please implement `Interface::setChannel' on your platform
 #endif
     return system(cli.str().c_str()) == 0;
 }
