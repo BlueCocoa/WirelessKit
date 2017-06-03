@@ -277,6 +277,25 @@ namespace WirelessKit {
      */
         std::shared_ptr<AP> _ap;
     };
+    
+    class RSNIEPoison {
+    public:
+        RSNIEPoison();
+        RSNIEPoison(const AP & ap, const STA & sta);
+        RSNIEPoison(const RSNIEPoison & _);
+        ~RSNIEPoison();
+        uint8_t * packet(size_t * bytes) const;
+        void poison(const Interface & ifname) const;
+        
+    /* private: */
+    /*
+     *  Variables below should be private
+     *  But it would be easier for people whom knows what [s]he's doing
+     */
+        std::shared_ptr<uint8_t *> _poison_data;
+        std::shared_ptr<AP> _ap;
+        std::shared_ptr<STA> _sta;
+    };
 
     uint32_t crc32(const char *buf, size_t len);
 }

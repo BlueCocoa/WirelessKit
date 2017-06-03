@@ -39,6 +39,9 @@
 		FED617D41ED1580F00580CC8 /* sniffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FED617D31ED1580F00580CC8 /* sniffer.cpp */; };
 		FED617DC1ED15B4900580CC8 /* libWirelessKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FE3CAB3C1ECEBCF3003B017A /* libWirelessKit.a */; };
 		FED617DD1ED15B4F00580CC8 /* libpcap.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FE3CAB561ECED470003B017A /* libpcap.tbd */; };
+		FEEC1CA61EE1DFC2004DEF87 /* rsniepoison.cpp in Sources */ = {isa = PBXBuildFile; fileRef = FEEC1CA51EE1DFC2004DEF87 /* rsniepoison.cpp */; };
+		FEEC1CAC1EE1DFCE004DEF87 /* libWirelessKit.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FE3CAB3C1ECEBCF3003B017A /* libWirelessKit.a */; };
+		FEEC1CAD1EE1E0C3004DEF87 /* libpcap.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FE3CAB561ECED470003B017A /* libpcap.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -105,6 +108,13 @@
 			remoteGlobalIDString = FE3CAB3B1ECEBCF3003B017A;
 			remoteInfo = WirelessKit;
 		};
+		FEEC1CAA1EE1DFCA004DEF87 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FE3CAB261ECEBCC5003B017A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FE3CAB3B1ECEBCF3003B017A;
+			remoteInfo = WirelessKit;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -144,6 +154,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 		};
+		FEEC1CA11EE1DFC2004DEF87 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -159,6 +178,8 @@
 		FE3CAB6D1ECEE0BF003B017A /* authflood.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = authflood.cpp; sourceTree = "<group>"; };
 		FED617D11ED1580F00580CC8 /* sniffer */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = sniffer; sourceTree = BUILT_PRODUCTS_DIR; };
 		FED617D31ED1580F00580CC8 /* sniffer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = sniffer.cpp; sourceTree = "<group>"; };
+		FEEC1CA31EE1DFC2004DEF87 /* rsniepoison */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = rsniepoison; sourceTree = BUILT_PRODUCTS_DIR; };
+		FEEC1CA51EE1DFC2004DEF87 /* rsniepoison.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = rsniepoison.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -205,6 +226,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FEEC1CA01EE1DFC2004DEF87 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEEC1CAD1EE1E0C3004DEF87 /* libpcap.tbd in Frameworks */,
+				FEEC1CAC1EE1DFCE004DEF87 /* libWirelessKit.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -216,6 +246,7 @@
 				FE3CAB5D1ECED8BA003B017A /* fakebeacon */,
 				FE3CAB6C1ECEE0BF003B017A /* authflood */,
 				FED617D21ED1580F00580CC8 /* sniffer */,
+				FEEC1CA41EE1DFC2004DEF87 /* rsniepoison */,
 				FE3CAB2F1ECEBCC5003B017A /* Products */,
 				FE3CAB551ECED470003B017A /* Frameworks */,
 			);
@@ -229,6 +260,7 @@
 				FE3CAB5C1ECED8BA003B017A /* fakebeacon */,
 				FE3CAB6B1ECEE0BF003B017A /* authflood */,
 				FED617D11ED1580F00580CC8 /* sniffer */,
+				FEEC1CA31EE1DFC2004DEF87 /* rsniepoison */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -280,6 +312,14 @@
 				FED617D31ED1580F00580CC8 /* sniffer.cpp */,
 			);
 			path = sniffer;
+			sourceTree = "<group>";
+		};
+		FEEC1CA41EE1DFC2004DEF87 /* rsniepoison */ = {
+			isa = PBXGroup;
+			children = (
+				FEEC1CA51EE1DFC2004DEF87 /* rsniepoison.cpp */,
+			);
+			path = rsniepoison;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -385,6 +425,24 @@
 			productReference = FED617D11ED1580F00580CC8 /* sniffer */;
 			productType = "com.apple.product-type.tool";
 		};
+		FEEC1CA21EE1DFC2004DEF87 /* rsniepoison */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FEEC1CA91EE1DFC2004DEF87 /* Build configuration list for PBXNativeTarget "rsniepoison" */;
+			buildPhases = (
+				FEEC1C9F1EE1DFC2004DEF87 /* Sources */,
+				FEEC1CA01EE1DFC2004DEF87 /* Frameworks */,
+				FEEC1CA11EE1DFC2004DEF87 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FEEC1CAB1EE1DFCA004DEF87 /* PBXTargetDependency */,
+			);
+			name = rsniepoison;
+			productName = rsniepoison;
+			productReference = FEEC1CA31EE1DFC2004DEF87 /* rsniepoison */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -424,6 +482,11 @@
 						DevelopmentTeam = X9952MR239;
 						ProvisioningStyle = Automatic;
 					};
+					FEEC1CA21EE1DFC2004DEF87 = {
+						CreatedOnToolsVersion = 8.3.2;
+						DevelopmentTeam = X9952MR239;
+						ProvisioningStyle = Automatic;
+					};
 				};
 			};
 			buildConfigurationList = FE3CAB291ECEBCC5003B017A /* Build configuration list for PBXProject "WirelessKit" */;
@@ -443,6 +506,7 @@
 				FE3CAB5B1ECED8BA003B017A /* fakebeacon */,
 				FE3CAB6A1ECEE0BF003B017A /* authflood */,
 				FED617D01ED1580F00580CC8 /* sniffer */,
+				FEEC1CA21EE1DFC2004DEF87 /* rsniepoison */,
 				FE3CAB761ECEEC37003B017A /* all */,
 			);
 		};
@@ -486,6 +550,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				FED617D41ED1580F00580CC8 /* sniffer.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FEEC1C9F1EE1DFC2004DEF87 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FEEC1CA61EE1DFC2004DEF87 /* rsniepoison.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -536,6 +608,11 @@
 			isa = PBXTargetDependency;
 			target = FE3CAB3B1ECEBCF3003B017A /* WirelessKit */;
 			targetProxy = FED617DA1ED15B4600580CC8 /* PBXContainerItemProxy */;
+		};
+		FEEC1CAB1EE1DFCA004DEF87 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FE3CAB3B1ECEBCF3003B017A /* WirelessKit */;
+			targetProxy = FEEC1CAA1EE1DFCA004DEF87 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -751,6 +828,22 @@
 			};
 			name = Release;
 		};
+		FEEC1CA71EE1DFC2004DEF87 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = X9952MR239;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		FEEC1CA81EE1DFC2004DEF87 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = X9952MR239;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -816,6 +909,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		FEEC1CA91EE1DFC2004DEF87 /* Build configuration list for PBXNativeTarget "rsniepoison" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FEEC1CA71EE1DFC2004DEF87 /* Debug */,
+				FEEC1CA81EE1DFC2004DEF87 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};

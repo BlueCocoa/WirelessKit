@@ -46,5 +46,14 @@ Generating thousands of counterfeit 802.11 beacons to make it hard for stations 
 #### sniffer
 Just as its name suggested :)
 
+#### RSN IE Poisoning
+A DoS attack against the four-way handshake protocol.
+
+(I have no idea why this get 'Segmentation fault' on Raspberry Pi 3)
+
+[IEEE 802.11 Denial-of-Service: RSN IE Poisoning](https://blog.0xbbc.com/2017/06/ieee-802-11-denial-of-service-rsn-ie-poisoning/)
+
+![Screenshots](https://raw.githubusercontent.com/BlueCocoa/WirelessKit/master/rsnie-poisoning.png)
+
 ### Usage
 You may refer to these demos. 
