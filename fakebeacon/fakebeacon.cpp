@@ -16,6 +16,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <thread>
 #include "WirelessKit.hpp"
@@ -36,6 +37,7 @@ using namespace WirelessKit;
 const struct option options[] = {
     { "ssid-with-bssid",  optional_argument, NULL, 'b' },
     { "ifname",           optional_argument, NULL, 'i' },
+    { "ssid-list",        optional_argument, NULL, 'l' },
     { "ssid",             optional_argument, NULL, 's' },
     { "help",             no_argument,       NULL, 'h' },
 };
@@ -57,7 +59,7 @@ int main(int argc, const char * argv[]) {
     Interface ifname(DEFAULT_WLAN);
     
     int arg, argslot;
-    while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "b:i:hs:", options, &argslot)) != -1) {
+    while (argslot = -1, (arg = getopt_long(argc, (char * const *)argv, "b:l:i:hs:", options, &argslot)) != -1) {
         switch (arg) {
             case 'b' : {
                 char * ssid = NULL, * bssid = NULL;
@@ -70,6 +72,13 @@ int main(int argc, const char * argv[]) {
                 if (bssid) delete [] bssid;
                 break;
             }
+            case 'l':{
+                ifstream file((string(optarg)));
+                string line;
+                while (getline(file,line))
+                    APs.emplace_back(BeaconFloodFrame(AP(line,MAC::random())));
+                break;
+            }
             case 's' : {
                 APs.emplace_back(BeaconFloodFrame(AP(string(optarg), MAC::random())));
                 break;
@@ -79,7 +88,7 @@ int main(int argc, const char * argv[]) {
                 break;
             }
             case 'h' : {
-                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-b|--ssid-with-bssid BB:BB:BB:BB:BB:BB@SSID] [-s|--ssid SSID]\nUse at your own risk & don't be jerk!\n", argv[0]);
+                fprintf(stdout, "%s [-i|--ifname " DEFAULT_WLAN "] [-l|--ssid-list ssids.txt] [-b|--ssid-with-bssid BB:BB:BB:BB:BB:BB@SSID] [-s|--ssid SSID]\nUse at your own risk & don't be jerk!\n", argv[0]);
                 return 0;
             }
         }
